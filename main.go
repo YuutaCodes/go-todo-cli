@@ -65,7 +65,7 @@ func (m model) View() tea.View {
 
 		s.WriteString(fmt.Sprintf("%s [%s] %s\n", cursor, checked, choice.Title))
 	}
-	s.WriteString("\nPress q to quit. ")
+	s.WriteString("\nPress q to quit. Press d to delete.  ")
 	if m.adding {
 		s.WriteString("Press esc to go back.")
 	}
@@ -107,6 +107,26 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case "down", "j":
 		if m.cursor < len(*m.choices) {
 			m.cursor++
+		}
+	case "d":
+		i := m.cursor - 1
+		if i < 0 {
+			break
+		}
+		if err := m.choices.Delete(i); err != nil {
+			break
+		}
+		shifted := make(map[int]struct{})
+		for j := range m.selected {
+			if j < i {
+				shifted[j] = struct{}{}
+			} else if j > i {
+				shifted[j-1] = struct{}{}
+			}
+		}
+		m.selected = shifted
+		if m.cursor > len(*m.choices) {
+			m.cursor--
 		}
 	case "enter", "space":
 		if m.cursor == 0 {
